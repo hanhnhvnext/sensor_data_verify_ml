@@ -75,7 +75,6 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
         super.viewDidLoad()
         pickerData = ["Walking", "Running", "Cycling"]
         userID.text = userDefault.string(forKey: "userID")
-        picker.selectRow(getPickerIndex(), inComponent: 0, animated: true)
         
         self.picker.delegate = self
         self.picker.dataSource = self
@@ -120,7 +119,7 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
             let fileURL = dir.appendingPathComponent(file)
             
             let userId = self.userDefault.string(forKey: "userID")!
-            let activityType = String(self.userDefault.string(forKey: "selectedActivity")!)
+            let activityType = pickerData[picker.selectedRow(inComponent: 0)]
             let timeline = String(Date().millisecondsSince1970)
             
             var dataRow = "\(userId),\(activityType),\(timeline),"
@@ -147,7 +146,7 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
         //test
         do {
             let dir: URL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).last! as URL
-            let url = dir.appendingPathComponent("logFile.txt")
+            let url = dir.appendingPathComponent("sensor_data.txt")
             try text.appendLineToURL(fileURL: url as URL)
             let result = try String(contentsOf: url as URL, encoding: String.Encoding.utf8)
         }

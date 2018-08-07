@@ -14,6 +14,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Spinner
 import android.widget.Toast
+import com.mlexample.sensorparamscollector.R.id.*
 import kotlinx.android.synthetic.main.activity_main.*
 import java.security.Permissions
 
