@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginLeft="16dp"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="10dp">
+
+            <TextView
+                android:layout_width="150dp"
+                android:layout_height="40dp"
+                android:text="Case ID"
+                android:gravity="center_vertical"
+                android:textColor="@android:color/black"
+                android:textSize="20sp"/>
+
+            <EditText
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:id="@+id/case_id"
+                android:gravity="center_horizontal"
+                android:layout_marginLeft="16dp"/>
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginLeft="16dp"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="10dp">
+
+            <TextView
+                android:layout_width="150dp"
+                android:layout_height="40dp"
+                android:text="User ID"
+                android:gravity="center_vertical"
+                android:textColor="@android:color/black"
+                android:textSize="20sp"/>
+
+            <EditText
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:id="@+id/user_id"
+                android:gravity="center_horizontal"
+                android:layout_marginLeft="16dp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginLeft="16dp"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="10dp">
+
+            <TextView
+                android:layout_width="150dp"
+                android:layout_height="40dp"
+                android:text="Activity Type"
+                android:gravity="center_vertical"
+                android:textColor="@android:color/black"
+                android:textSize="20sp"/>
+
+            <Spinner
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:id="@+id/activity_type"
+                android:gravity="center_horizontal"
+                android:entries="@array/activity_arrays"
+                android:layout_marginLeft="16dp"/>
+        </LinearLayout>
+
+
+        <Button
+            android:id="@+id/start_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Start Collecting"
+            android:layout_marginBottom="10dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+        
+        <TextView
+
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:text="Cycling: N/A"
+            android:textColor="@color/colorPrimary"
+            android:gravity="center"
+            android:layout_gravity="center_horizontal"
+            android:id="@+id/cycling_confidence"/>
+
+    </LinearLayout>
+
+
+
+</RelativeLayout>
