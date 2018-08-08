@@ -152,7 +152,7 @@ val graphFilePath = "file:///android_asset/final_unity_har.pb"
             data.addAll(zArray)
 
             val result = FloatArray(OUTPUT_SIZE)
-
+            Log.e("start",System.currentTimeMillis().toString())
             classifier.feed(INPUT_NODE, toFloatArray(data), 1, 200, 3)
             classifier.run(OUTPUT_NODES)
             classifier.fetch(OUTPUT_NODE, result)
@@ -166,6 +166,8 @@ val graphFilePath = "file:///android_asset/final_unity_har.pb"
     }
 
     private fun sendResultToActivity(result: FloatArray) {
+        Log.e("end",System.currentTimeMillis().toString())
+
 //        Log.e("cycling confident", confidence.toString());
         val intent = Intent("cyclingIntent")
         intent.putExtra("Cycling", result[0])
@@ -190,7 +192,7 @@ val graphFilePath = "file:///android_asset/final_unity_har.pb"
 
     private fun saveData(accX:Float,accY:Float,accZ:Float){
         val currentTime = System.currentTimeMillis()
-        val data = userId + "," + activityType + "," + currentTime.toString() + "," + accX + "," + accY + "," + accZ +caseId+"\n"
+        val data = userId + "," + activityType + "," + currentTime.toString() + "," + accX + "," + accY + "," + accZ +","+caseId+"\n"
         try {
             val outputStreamWriter = OutputStreamWriter(FileOutputStream(outputFile, true))
             outputStreamWriter.write(data)

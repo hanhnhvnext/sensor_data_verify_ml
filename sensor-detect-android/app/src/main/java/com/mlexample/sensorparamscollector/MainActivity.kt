@@ -70,15 +70,16 @@ class MainActivity : AppCompatActivity() {
                 cyclingConfidence.text = "Cycling:  No. " ;
 
             }
-            service!!.saveActivity(cyclingConfidence.text.toString() + ", Confidence: "+ Cycling+"\n" )
 
-//            +
-//             "Downstairs Confidence:"+ Downstairs.toString()+"\n"+
-//                    "Jogging Confidence:"+ Jogging.toString()+"\n"+
-//                    "Sitting Confidence:"+ Sitting.toString()+"\n"+
-//                    "Standing Confidence"+ Standing.toString()+"\n"+
-//                    "Upstair Confidence:"+ Upstairs.toString()+"\n"+
-//                    "Walking Confindence:"+ Walking.toString()+"\n";
+            val text = cyclingConfidence.text.toString() + ", Confidence: "+ Cycling+"\n"+
+             "Downstairs Confidence:"+ Downstairs.toString()+"\n"+
+                    "Jogging Confidence:"+ Jogging.toString()+"\n"+
+                    "Sitting Confidence:"+ Sitting.toString()+"\n"+
+                    "Standing Confidence"+ Standing.toString()+"\n"+
+                    "Upstair Confidence:"+ Upstairs.toString()+"\n"+
+                    "Walking Confindence:"+ Walking.toString()+"\n";
+            service!!.saveActivity(text)
+
         }
     }
 
