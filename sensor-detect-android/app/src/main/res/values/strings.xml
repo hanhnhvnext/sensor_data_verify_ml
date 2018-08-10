@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SensorParamsCollector</string>
+    <string name="app_name">SensorDetect</string>
 
     <string-array name="activity_arrays">
         <item>Running</item>

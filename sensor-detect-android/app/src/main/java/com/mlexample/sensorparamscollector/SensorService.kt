@@ -120,7 +120,7 @@ val graphFilePath = "file:///android_asset/final_unity_har.pb"
             accX = sensorEvent!!.values[0]
             accY = sensorEvent!!.values[1]
             accZ = sensorEvent!!.values[2]
-            saveData(accX, accY, accZ)
+//            saveData(accX, accY, accZ)
             processData(sensorEvent)
 
         } else if(sensor?.type == Sensor.TYPE_GYROSCOPE){

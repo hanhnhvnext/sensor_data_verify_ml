@@ -14,6 +14,8 @@ import android.support.v4.content.LocalBroadcastManager
 import android.widget.*
 import kotlinx.android.synthetic.main.activity_main.*
 import java.security.Permissions
+import java.text.SimpleDateFormat
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -64,14 +66,16 @@ class MainActivity : AppCompatActivity() {
             val Walking        = intent!!.getFloatExtra("Walking",0.0f)
 
 
-            if(Cycling > 0.9) {
-                cyclingConfidence.text = "Cycling:  Yes. ";
+            if(Cycling > 0.85) {
+                cyclingConfidence.text = "Cycling:  Yes. "+ ", Confidence : "+ Cycling;
             }else {
-                cyclingConfidence.text = "Cycling:  No. " ;
+                cyclingConfidence.text = "Cycling:  No. " +", Confidence : "+ Cycling;
 
             }
+            val sdf = SimpleDateFormat("dd/M/yyyy hh:mm:ss")
+            val currentDate = sdf.format(Date())
 
-            val text = cyclingConfidence.text.toString() + ", Confidence: "+ Cycling+"\n"+
+            val text = "Time:"+currentDate+","+cyclingConfidence.text.toString() +"\n"+
              "Downstairs Confidence:"+ Downstairs.toString()+"\n"+
                     "Jogging Confidence:"+ Jogging.toString()+"\n"+
                     "Sitting Confidence:"+ Sitting.toString()+"\n"+

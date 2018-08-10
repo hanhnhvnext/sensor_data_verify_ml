@@ -69,7 +69,6 @@ fastlane/test_output
 
 #Android Studio
 # Built application files
-*.apk
 *.ap_
 
 # Files for the ART/Dalvik VM
