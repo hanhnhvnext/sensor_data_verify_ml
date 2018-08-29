@@ -34,7 +34,7 @@ import kotlin.collections.ArrayList
 
 class SensorService : Service(), SensorEventListener {
 //    val graphFilePath = "file:///android_asset/frozen_model.pb"
-val graphFilePath = "file:///android_asset/final_unity_har.pb"
+val graphFilePath = "file:///android_asset/final_unity_har_20180823.pb"
 
     val N_SAMPLES = 200
     val outputPath = "Sensor_Collector"
@@ -82,7 +82,7 @@ val graphFilePath = "file:///android_asset/final_unity_har.pb"
         }
 
 //        val outputName = fileFormat.format(Date())
-        val outputName = "sensor_data.txt"
+        val outputName = "sensor_data_detect.txt"
 
         outputFile = File(outputRoot, outputName).absolutePath
     }
@@ -120,7 +120,7 @@ val graphFilePath = "file:///android_asset/final_unity_har.pb"
             accX = sensorEvent!!.values[0]
             accY = sensorEvent!!.values[1]
             accZ = sensorEvent!!.values[2]
-//            saveData(accX, accY, accZ)
+            saveData(accX, accY, accZ)
             processData(sensorEvent)
 
         } else if(sensor?.type == Sensor.TYPE_GYROSCOPE){
@@ -136,6 +136,11 @@ val graphFilePath = "file:///android_asset/final_unity_har.pb"
 
     }
 
+//    var array = Array(200, {FloatArray(3)})
+    var array = Array(200, {FloatArray(3)})
+    var str = ""
+    var i = 0
+
     private fun processData(sensorEvent: SensorEvent?){
         val x = sensorEvent!!.values[0]
         val y = sensorEvent!!.values[1]
@@ -145,14 +150,35 @@ val graphFilePath = "file:///android_asset/final_unity_har.pb"
         yArray.add(y)
         zArray.add(z)
 
+//        var item = FloatArray(3)
+//        item[0] = x
+//        item[1] = y
+//        item[2] = z
+        if(i < 200) {
+//            array[i] = arrayOf(x, y, z);
+            array[i] = floatArrayOf(x,y,z)
+
+        }
+
+        Log.e("---",Arrays.toString(floatArrayOf(x,y,z)))
+        i++
+        str = str +","+ Arrays.toString(floatArrayOf(x,y,z))
+
+
+
+
         if(xArray.size == N_SAMPLES && yArray.size == N_SAMPLES && zArray.size == N_SAMPLES) {
+//            saveData(str)
+
+
             val data = arrayListOf<Float>()
             data.addAll(xArray)
             data.addAll(yArray)
             data.addAll(zArray)
 
             val result = FloatArray(OUTPUT_SIZE)
-            Log.e("start",System.currentTimeMillis().toString())
+            Log.e("start",Arrays.toString(toFloatArray(data)))
+//            saveData(Arrays.toString(toFloatArray(data)))
             classifier.feed(INPUT_NODE, toFloatArray(data), 1, 200, 3)
             classifier.run(OUTPUT_NODES)
             classifier.fetch(OUTPUT_NODE, result)
@@ -162,6 +188,7 @@ val graphFilePath = "file:///android_asset/final_unity_har.pb"
             xArray.clear()
             yArray.clear()
             zArray.clear()
+            str = ""
         }
     }
 
@@ -193,6 +220,17 @@ val graphFilePath = "file:///android_asset/final_unity_har.pb"
     private fun saveData(accX:Float,accY:Float,accZ:Float){
         val currentTime = System.currentTimeMillis()
         val data = userId + "," + activityType + "," + currentTime.toString() + "," + accX + "," + accY + "," + accZ +","+caseId+"\n"
+        try {
+            val outputStreamWriter = OutputStreamWriter(FileOutputStream(outputFile, true))
+            outputStreamWriter.write(data)
+            outputStreamWriter.close()
+        } catch (e: IOException) {
+            Log.e("Exception", "File write failed: " + e.toString())
+        }
+
+    }
+
+    private fun saveData(data:String){
         try {
             val outputStreamWriter = OutputStreamWriter(FileOutputStream(outputFile, true))
             outputStreamWriter.write(data)

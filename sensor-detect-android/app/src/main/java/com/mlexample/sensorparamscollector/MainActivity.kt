@@ -82,6 +82,7 @@ class MainActivity : AppCompatActivity() {
                     "Standing Confidence"+ Standing.toString()+"\n"+
                     "Upstair Confidence:"+ Upstairs.toString()+"\n"+
                     "Walking Confindence:"+ Walking.toString()+"\n";
+
             service!!.saveActivity(text)
 
         }
