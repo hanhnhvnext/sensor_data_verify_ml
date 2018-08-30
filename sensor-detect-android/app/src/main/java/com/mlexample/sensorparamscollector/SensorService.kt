@@ -11,7 +11,6 @@ import android.os.Binder
 import android.os.Environment
 import android.os.IBinder
 import android.util.Log
-import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 import android.app.Notification
@@ -23,18 +22,17 @@ import android.preference.PreferenceManager
 import android.support.v4.app.NotificationCompat
 import android.support.v4.app.TaskStackBuilder
 import android.support.v4.content.LocalBroadcastManager
+import android.text.TextUtils
 import android.view.View
 import org.tensorflow.contrib.android.TensorFlowInferenceInterface
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.OutputStreamWriter
+import java.io.*
 import java.lang.reflect.Array
 import kotlin.collections.ArrayList
 
 
-class SensorService : Service(), SensorEventListener {
+class SensorService : Service(){
 //    val graphFilePath = "file:///android_asset/frozen_model.pb"
-val graphFilePath = "file:///android_asset/final_unity_har_20180823.pb"
+    val graphFilePath = "file:///android_asset/final_unity_har_20180823.pb"
 
     val N_SAMPLES = 200
     val outputPath = "Sensor_Collector"
@@ -51,7 +49,7 @@ val graphFilePath = "file:///android_asset/final_unity_har_20180823.pb"
     private val OUTPUT_NODES = arrayOf("y_")
     private val OUTPUT_NODE = "y_"
     private val INPUT_SIZE = longArrayOf(1, 200, 3)
-    private val OUTPUT_SIZE = 7
+    private val OUTPUT_SIZE = 2
 
     val sensorManager: SensorManager by lazy {
         getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -69,9 +67,6 @@ val graphFilePath = "file:///android_asset/final_unity_har_20180823.pb"
 
     override fun onCreate() {
         super.onCreate()
-        sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_NORMAL)
-        sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE), SensorManager.SENSOR_DELAY_NORMAL)
-
         preferences = PreferenceManager.getDefaultSharedPreferences(this)
         userId = preferences.getString("user_id", "")
         caseId = preferences.getString("case_id","")
@@ -81,13 +76,18 @@ val graphFilePath = "file:///android_asset/final_unity_har_20180823.pb"
             return
         }
 
-//        val outputName = fileFormat.format(Date())
         val outputName = "sensor_data_detect.txt"
 
         outputFile = File(outputRoot, outputName).absolutePath
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if(intent != null){
+            val action = intent.action
+            if(action.equals("start_detect_activity")){
+                processData()
+            }
+        }
         startForeground()
         return START_STICKY
     }
@@ -97,98 +97,39 @@ val graphFilePath = "file:///android_asset/final_unity_har_20180823.pb"
     }
 
 
-    override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
+    private fun processData(){
+        val bufferReader = File(Environment.getExternalStorageDirectory(), "data_set_raw.txt").bufferedReader()
+        var line  : String? = null
+        while ({ line = bufferReader.readLine(); line }() != null) {
+            val words = line!!.split(',')
+            val x = words[3].toFloat()
+            val y = words[4].toFloat()
+            val z = words[5].toFloat()
 
-    }
-    var accX = 0.0f
-    var accY= 0.0f
-    var accZ= 0.0f
-    var gyroX= 0.0f
-    var gyroY= 0.0f
-    var gyroZ= 0.0f
-    var accLemeter = false
-    var gyroScope = false
-
-    override fun onSensorChanged(sensorEvent: SensorEvent?) {
-
-//        val gyro: Sensor
-        val sensor = sensorEvent?.sensor
-//        Log.e("sensor", "type".plus(sensor?.type ).plus("---").plus(System.currentTimeMillis()));
-        if(sensor?.type == Sensor.TYPE_ACCELEROMETER){
-            accLemeter = true
-//            saveData(sensorEvent)
-            accX = sensorEvent!!.values[0]
-            accY = sensorEvent!!.values[1]
-            accZ = sensorEvent!!.values[2]
-            saveData(accX, accY, accZ)
-            processData(sensorEvent)
-
-        } else if(sensor?.type == Sensor.TYPE_GYROSCOPE){
-            gyroScope = true
-            gyroX = sensorEvent!!.values[0]
-            gyroY = sensorEvent!!.values[1]
-            gyroZ = sensorEvent!!.values[2]
-        }
-        if(accLemeter && gyroScope) {
-            accLemeter = false
-            gyroScope = false
-        }
-
-    }
-
-//    var array = Array(200, {FloatArray(3)})
-    var array = Array(200, {FloatArray(3)})
-    var str = ""
-    var i = 0
-
-    private fun processData(sensorEvent: SensorEvent?){
-        val x = sensorEvent!!.values[0]
-        val y = sensorEvent!!.values[1]
-        val z = sensorEvent!!.values[2]
-
-        xArray.add(x)
-        yArray.add(y)
-        zArray.add(z)
-
-//        var item = FloatArray(3)
-//        item[0] = x
-//        item[1] = y
-//        item[2] = z
-        if(i < 200) {
-//            array[i] = arrayOf(x, y, z);
-            array[i] = floatArrayOf(x,y,z)
-
-        }
-
-        Log.e("---",Arrays.toString(floatArrayOf(x,y,z)))
-        i++
-        str = str +","+ Arrays.toString(floatArrayOf(x,y,z))
+            xArray.add(x)
+            yArray.add(y)
+            zArray.add(z)
 
 
+            if(xArray.size == N_SAMPLES && yArray.size == N_SAMPLES && zArray.size == N_SAMPLES) {
 
+                val data = arrayListOf<Float>()
+                data.addAll(xArray)
+                data.addAll(yArray)
+                data.addAll(zArray)
 
-        if(xArray.size == N_SAMPLES && yArray.size == N_SAMPLES && zArray.size == N_SAMPLES) {
-//            saveData(str)
+                val result = FloatArray(OUTPUT_SIZE)
+                Log.e("start",Arrays.toString(toFloatArray(data)))
+                classifier.feed(INPUT_NODE, toFloatArray(data), 1, 200, 3)
+                classifier.run(OUTPUT_NODES)
+                classifier.fetch(OUTPUT_NODE, result)
+                sendResultToActivity(result)
+                Log.e("result:",Arrays.toString(result));
 
-
-            val data = arrayListOf<Float>()
-            data.addAll(xArray)
-            data.addAll(yArray)
-            data.addAll(zArray)
-
-            val result = FloatArray(OUTPUT_SIZE)
-            Log.e("start",Arrays.toString(toFloatArray(data)))
-//            saveData(Arrays.toString(toFloatArray(data)))
-            classifier.feed(INPUT_NODE, toFloatArray(data), 1, 200, 3)
-            classifier.run(OUTPUT_NODES)
-            classifier.fetch(OUTPUT_NODE, result)
-            sendResultToActivity(result)
-            Log.e("result:",Arrays.toString(result));
-
-            xArray.clear()
-            yArray.clear()
-            zArray.clear()
-            str = ""
+                xArray.clear()
+                yArray.clear()
+                zArray.clear()
+            }
         }
     }
 
@@ -198,12 +139,8 @@ val graphFilePath = "file:///android_asset/final_unity_har_20180823.pb"
 //        Log.e("cycling confident", confidence.toString());
         val intent = Intent("cyclingIntent")
         intent.putExtra("Cycling", result[0])
-        intent.putExtra("Downstairs",result[1])
-        intent.putExtra("Jogging",result[2])
-        intent.putExtra("Sitting",result[3])
-        intent.putExtra("Standing",result[4])
-        intent.putExtra("Upstairs",result[5])
-        intent.putExtra("Walking",result[6])
+        intent.putExtra("No_Cycling",result[1])
+
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
     }
 
@@ -240,7 +177,7 @@ val graphFilePath = "file:///android_asset/final_unity_har_20180823.pb"
         }
 
     }
-    public fun saveActivity(data: String){
+    fun saveActivity(data: String){
         try {
             val outputStreamWriter = OutputStreamWriter(FileOutputStream(outputFile, true))
             outputStreamWriter.write(data)
@@ -261,7 +198,6 @@ val graphFilePath = "file:///android_asset/final_unity_har_20180823.pb"
     override fun onDestroy() {
         super.onDestroy()
         running = false
-        sensorManager.unregisterListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER))
     }
 
     fun startForeground() {

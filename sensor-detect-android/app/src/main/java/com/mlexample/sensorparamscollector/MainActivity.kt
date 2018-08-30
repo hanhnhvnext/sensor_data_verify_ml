@@ -3,7 +3,6 @@ package com.mlexample.sensorparamscollector
 import android.Manifest
 import android.content.*
 import android.content.pm.PackageManager
-import android.os.Binder
 import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -13,7 +12,6 @@ import android.support.annotation.RequiresApi
 import android.support.v4.content.LocalBroadcastManager
 import android.widget.*
 import kotlinx.android.synthetic.main.activity_main.*
-import java.security.Permissions
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -57,34 +55,18 @@ class MainActivity : AppCompatActivity() {
 
     private val cyclingReceiver  = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent?) {
-            val Cycling = intent!!.getFloatExtra("Cycling", 0.0f)
-            val Downstairs        = intent!!.getFloatExtra("Downstairs",0.0f)
-            val Jogging        = intent!!.getFloatExtra("Jogging",0.0f)
-            val Sitting        = intent!!.getFloatExtra("Sitting",0.0f)
-            val Standing        = intent!!.getFloatExtra("Standing",0.0f)
-            val Upstairs        = intent!!.getFloatExtra("Upstairs",0.0f)
-            val Walking        = intent!!.getFloatExtra("Walking",0.0f)
+            val cycling = intent!!.getFloatExtra("Cycling", 0.0f)
+            val noCycling = intent.getFloatExtra("No_Cycling",0.0f)
 
-
-            if(Cycling > 0.85) {
-                cyclingConfidence.text = "Cycling:  Yes. "+ ", Confidence : "+ Cycling;
+            if(cycling > 0.95) {
+                cyclingConfidence.text = "Cycling " + ", Confidence : " + cycling
             }else {
-                cyclingConfidence.text = "Cycling:  No. " +", Confidence : "+ Cycling;
-
+                cyclingConfidence.text = "No_Cycling " +", Confidence : " + noCycling
             }
-            val sdf = SimpleDateFormat("dd/M/yyyy hh:mm:ss")
-            val currentDate = sdf.format(Date())
 
-            val text = "Time:"+currentDate+","+cyclingConfidence.text.toString() +"\n"+
-             "Downstairs Confidence:"+ Downstairs.toString()+"\n"+
-                    "Jogging Confidence:"+ Jogging.toString()+"\n"+
-                    "Sitting Confidence:"+ Sitting.toString()+"\n"+
-                    "Standing Confidence"+ Standing.toString()+"\n"+
-                    "Upstair Confidence:"+ Upstairs.toString()+"\n"+
-                    "Walking Confindence:"+ Walking.toString()+"\n";
+            val text = cyclingConfidence.text.toString()
 
             service!!.saveActivity(text)
-
         }
     }
 
@@ -107,7 +89,9 @@ class MainActivity : AppCompatActivity() {
                 preferences.edit().putString("user_id", userId.text.toString()).apply()
                 preferences.edit().putString("case_id",caseId.text.toString()).apply()
                 preferences.edit().putString("activity_type", activityType.selectedItem.toString()).apply()
-                startService(Intent(this, SensorService::class.java))
+                val intent = Intent(this, SensorService::class.java)
+                intent.setAction("start_detect_activity")
+                startService(intent)
                 bindService(Intent(this, SensorService::class.java), serviceConnection, Context.BIND_AUTO_CREATE)
                 startBtn.setText("Stop Collecting")
                 preferences.edit().putBoolean("service_running", true).apply()
