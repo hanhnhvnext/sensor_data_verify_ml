@@ -91,7 +91,7 @@
             android:id="@+id/start_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Start Collecting"
+            android:text="Start Verifying"
             android:layout_marginBottom="10dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
@@ -99,7 +99,6 @@
             app:layout_constraintTop_toTopOf="parent" />
         
         <TextView
-
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="16sp"

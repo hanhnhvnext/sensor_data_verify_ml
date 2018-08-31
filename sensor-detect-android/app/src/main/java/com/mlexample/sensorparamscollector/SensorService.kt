@@ -1,5 +1,6 @@
 package com.mlexample.sensorparamscollector
 
+import android.app.IntentService
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -24,13 +25,14 @@ import android.support.v4.app.TaskStackBuilder
 import android.support.v4.content.LocalBroadcastManager
 import android.text.TextUtils
 import android.view.View
+import android.widget.Toast
 import org.tensorflow.contrib.android.TensorFlowInferenceInterface
 import java.io.*
 import java.lang.reflect.Array
 import kotlin.collections.ArrayList
 
 
-class SensorService : Service(){
+class SensorService: IntentService("MyService"){
 //    val graphFilePath = "file:///android_asset/frozen_model.pb"
     val graphFilePath = "file:///android_asset/final_unity_har_20180823.pb"
 
@@ -67,10 +69,6 @@ class SensorService : Service(){
 
     override fun onCreate() {
         super.onCreate()
-        preferences = PreferenceManager.getDefaultSharedPreferences(this)
-        userId = preferences.getString("user_id", "")
-        caseId = preferences.getString("case_id","")
-        activityType = preferences.getString("activity_type", "")
         running = true
         if(!outputRoot.exists() && !outputRoot.mkdirs()){
             return
@@ -82,6 +80,10 @@ class SensorService : Service(){
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        return super.onStartCommand(intent, flags, startId)
+    }
+
+    override fun onHandleIntent(intent: Intent?) {
         if(intent != null){
             val action = intent.action
             if(action.equals("start_detect_activity")){
@@ -89,11 +91,6 @@ class SensorService : Service(){
             }
         }
         startForeground()
-        return START_STICKY
-    }
-
-    override fun onBind(p0: Intent?): IBinder? {
-        return binder
     }
 
 
@@ -109,7 +106,6 @@ class SensorService : Service(){
             xArray.add(x)
             yArray.add(y)
             zArray.add(z)
-
 
             if(xArray.size == N_SAMPLES && yArray.size == N_SAMPLES && zArray.size == N_SAMPLES) {
 
@@ -131,6 +127,8 @@ class SensorService : Service(){
                 zArray.clear()
             }
         }
+        Toast.makeText(this, "Done!", Toast.LENGTH_SHORT).show()
+        enableButton()
     }
 
     private fun sendResultToActivity(result: FloatArray) {
@@ -141,6 +139,11 @@ class SensorService : Service(){
         intent.putExtra("Cycling", result[0])
         intent.putExtra("No_Cycling",result[1])
 
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+    }
+
+    private fun enableButton(){
+        val intent = Intent("enableButton")
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
     }
 

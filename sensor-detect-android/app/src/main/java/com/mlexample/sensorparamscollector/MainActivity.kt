@@ -6,12 +6,18 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Environment
 import android.os.IBinder
 import android.preference.PreferenceManager
 import android.support.annotation.RequiresApi
 import android.support.v4.content.LocalBroadcastManager
+import android.util.Log
 import android.widget.*
 import kotlinx.android.synthetic.main.activity_main.*
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.OutputStreamWriter
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -28,6 +34,7 @@ class MainActivity : AppCompatActivity() {
     }
     lateinit var preferences: SharedPreferences
     var running : Boolean = false
+    var outputFile = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,12 +52,17 @@ class MainActivity : AppCompatActivity() {
         activityType.setSelection(getIndex(activityType, preferences.getString("activity_type","")))
         startBtn.setOnClickListener { startSensorService() }
         if(running){
-            startBtn.setText("Stop Collecting")
+            startBtn.isClickable = false
         }
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
             requestPermission()
 
         LocalBroadcastManager.getInstance(this).registerReceiver(cyclingReceiver, IntentFilter("cyclingIntent"))
+        LocalBroadcastManager.getInstance(this).registerReceiver(enableButtonReceiver, IntentFilter("enableButton"))
+
+        val outputName = "sensor_data_detect.txt"
+
+        outputFile = File(Environment.getExternalStorageDirectory(), outputName).absolutePath
     }
 
     private val cyclingReceiver  = object : BroadcastReceiver() {
@@ -59,14 +71,31 @@ class MainActivity : AppCompatActivity() {
             val noCycling = intent.getFloatExtra("No_Cycling",0.0f)
 
             if(cycling > 0.95) {
-                cyclingConfidence.text = "Cycling " + ", Confidence : " + cycling
+                cyclingConfidence.text = "Cycling " + ", Confidence : " + cycling + "\n"
             }else {
-                cyclingConfidence.text = "No_Cycling " +", Confidence : " + noCycling
+                cyclingConfidence.text = "No_Cycling " +", Confidence : " + noCycling + "\n"
             }
 
             val text = cyclingConfidence.text.toString()
 
-            service!!.saveActivity(text)
+            saveActivity(text)
+        }
+    }
+
+    private val enableButtonReceiver = object  : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent?) {
+            startBtn.isClickable = true
+            preferences.edit().putBoolean("service_running", false).apply()
+        }
+    }
+
+    fun saveActivity(data: String){
+        try {
+            val outputStreamWriter = OutputStreamWriter(FileOutputStream(outputFile, true))
+            outputStreamWriter.write(data)
+            outputStreamWriter.close()
+        } catch (e: IOException) {
+            Log.e("Exception", "File write failed: " + e.toString())
         }
     }
 
@@ -80,34 +109,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun startSensorService(){
         if(!preferences.getBoolean("service_running", false)) {
-            if (userId.text.isEmpty()) {
-                Toast.makeText(this, "Please input user id first", Toast.LENGTH_SHORT).show()
-            }else if(caseId.text.isEmpty()){
-                Toast.makeText(this, "Please input case id", Toast.LENGTH_SHORT).show()
-
-            } else {
-                preferences.edit().putString("user_id", userId.text.toString()).apply()
-                preferences.edit().putString("case_id",caseId.text.toString()).apply()
-                preferences.edit().putString("activity_type", activityType.selectedItem.toString()).apply()
-                val intent = Intent(this, SensorService::class.java)
-                intent.setAction("start_detect_activity")
-                startService(intent)
-                bindService(Intent(this, SensorService::class.java), serviceConnection, Context.BIND_AUTO_CREATE)
-                startBtn.setText("Stop Collecting")
-                preferences.edit().putBoolean("service_running", true).apply()
-            }
-        } else {
-            preferences.edit().putBoolean("service_running", false).apply()
-            service?.stopForeground(true)
-            if(service != null) {
-                try {
-                    unbindService(serviceConnection)
-                } catch (e : IllegalArgumentException){
-
-                }
-            }
-            stopService(Intent(this, SensorService::class.java))
-            startBtn.setText("Start Collecting")
+            val intent = Intent(this, SensorService::class.java)
+            intent.setAction("start_detect_activity")
+            startService(intent)
+            bindService(Intent(this, SensorService::class.java), serviceConnection, Context.BIND_AUTO_CREATE)
+            startBtn.isClickable = false
+            preferences.edit().putBoolean("service_running", true).apply()
         }
     }
 
